@@ -1,25 +1,11 @@
 import re
 
 import config
-import file_ops
+import db
 import requests
 from bs4 import BeautifulSoup
 
 AC_COOKIES = {"ac_campaign": "show"}
-
-COLUMNS = [
-    (1, "Titolo italiano", "titolo_italiano"),
-    (2, "Storia", "storia"),
-    (3, "Disegni", "disegni"),
-    (4, "Categoria", "categoria"),
-    (5, "Anno", "anno"),
-    (6, "Volumi pubblicati", "volumi"),
-    (7, "Ultimo volume", "ultimo_volume"),
-    (8, "Ultima data di uscita", "ultima_data"),
-    (9, "Prossimo volume", "prossimo_volume"),
-    (10, "Prossima data di uscita", "prossima_data"),
-    (14, "Stato in Italia", "stato_italia"),
-]
 
 
 def _fetch_page(url):
@@ -67,15 +53,13 @@ def _parse_release_info(soup, home_url):
     return prossimo_volume, prossima_data, ultimo_volume, ultima_data
 
 
-def get_data(user_input):
-    print("Fetching data...")
+def fetch_and_store():
+    print("Fetching AC data...")
     home_url = config.ac_home_url
-    mangalist = file_ops.get_titles(user_input)
-    results = []
 
-    for manga_url in mangalist:
-        print("Fetching " + manga_url)
-        soup = _fetch_page(manga_url)
+    for ac_url in db.get_ac_urls():
+        print("Fetching " + ac_url)
+        soup = _fetch_page(ac_url)
 
         titolo = soup.find("h1").getText().strip()
         print(titolo)
@@ -85,7 +69,7 @@ def get_data(user_input):
             _parse_release_info(soup, home_url)
         )
 
-        results.append({
+        data = {
             "titolo_italiano": titolo,
             "storia": _get_field(soup, "Storia"),
             "disegni": _get_field(soup, "Disegni"),
@@ -97,25 +81,8 @@ def get_data(user_input):
             "prossima_data": prossima_data,
             "ultimo_volume": ultimo_volume,
             "ultima_data": ultima_data,
-        })
+        }
 
-    return results
+        db.update_ac_data(ac_url, data)
 
-
-def ac_write_to_xlsx(user_input):
-    results = get_data(user_input)
-
-    print("Writing data to excel file...")
-    path_collection, book = file_ops.load_book()
-    sheet = book["auto"]
-
-    for col_num, header, key in COLUMNS:
-        sheet.cell(row=1, column=col_num, value=header)
-        for i, entry in enumerate(results, start=2):
-            sheet.cell(row=i, column=col_num, value=entry[key])
-
-    book.save(path_collection)
-    print("Collection file updated successfully.")
-
-    file_ops.copy_to_cloud(path_collection, config.path_cloud)
-    print("Collection file copied for cloud sync.")
+    print("AC data updated successfully.")
