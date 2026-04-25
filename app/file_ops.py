@@ -4,7 +4,7 @@ from openpyxl import load_workbook
 
 
 def load_book():
-    path_test = os.path.join(os.path.expanduser('~'), 'Projects', 'mangatracker', 'files', 'Manga Collection.xlsx')
+    path_test = os.path.join(os.path.dirname(__file__), '..', 'Manga_Collection.xlsx')
     workBook = load_workbook(path_test, read_only=False)
     return path_test, workBook
 
