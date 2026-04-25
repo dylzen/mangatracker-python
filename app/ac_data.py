@@ -1,9 +1,10 @@
-from time import sleep
 import config as config
 import file_ops
 import requests
 import re
 from bs4 import BeautifulSoup
+
+AC_COOKIES = {"ac_campaign": "show"}
 
 def get_data(user_input):
     print("Fetching data...")
@@ -24,15 +25,8 @@ def get_data(user_input):
     mangalist = file_ops.get_titles(user_input)
     for manga in mangalist:
         print("Fetching "+manga)
-        response = requests.get(manga, allow_redirects=True)
+        response = requests.get(manga, cookies=AC_COOKIES)
         soup = BeautifulSoup(response.text, 'html.parser')
-        if soup.find(text="Informazione Pubblicitaria - "):
-            ### This is to bypass the video advert that sometimes appears when loading the url ###
-            session = requests.Session()
-            response = session.get(manga)
-            sleep(1)
-            response = session.get(manga)
-            soup = BeautifulSoup(response.text, 'html.parser')
         titolo_italiano = soup.find('h1').getText()
         print(titolo_italiano)
         storia = soup.find(text="Storia")
@@ -99,21 +93,11 @@ def get_data(user_input):
     print("Creating dates list...")
     next_volume_dates = []
     latest_volume_dates = []
-    session = requests.Session()
     for item in next_releases_dates:
         if item != "N.D.":
             print("Found new release date for manga: " +item)
-            # response_next = session.get(item)
-            response_next = requests.get(item, allow_redirects=True)
+            response_next = requests.get(item, cookies=AC_COOKIES)
             soup_next = BeautifulSoup(response_next.text, 'html.parser')
-            if soup_next.find(text="Informazione Pubblicitaria - "):
-                print("Found an ad for manga: " + item + " , retrying")
-            ### This is to bypass the video advert that sometimes appears when loading the url ###
-                session = requests.Session()
-                response_next = session.get(item)
-                sleep(1)
-                response_next = session.get(item)
-                soup_next = BeautifulSoup(response_next.text, 'html.parser')
             next_date_parent = soup_next.find('strong', text="Data pubblicazione:")
             next_volume_dates.append(next_date_parent.next_sibling.text)
         else:
@@ -121,7 +105,7 @@ def get_data(user_input):
 
     for item in latest_releases_dates:
         if item != "N.D.":
-            response_latest = session.get(item)
+            response_latest = requests.get(item, cookies=AC_COOKIES)
             soup_latest = BeautifulSoup(response_latest.text, 'html.parser')
             latest_date_parent = soup_latest.find('strong', text="Data pubblicazione:")
             latest_volume_dates.append(latest_date_parent.next_sibling.text)
