@@ -18,10 +18,9 @@ A personal Python script that tracks manga titles by scraping metadata from popu
    pip install python-dotenv
    ```
 
-2. Create `app/.env` with your configuration:
+2. Copy `app/.env.example` to `app/.env` and fill in your configuration:
    ```
-   AC_HOME_URL=<source-a-base-url>
-   PATH_CLOUD=
+   cp app/.env.example app/.env
    ```
 
 3. Run the migration to import manga URLs from the Excel file into SQLite:
@@ -51,8 +50,9 @@ Choose an option:
 ```
 app/
   main.py              # Entry point with menu
-  ac_data.py           # Source A scraper
-  mal_data.py          # Source B scraper
+  source_a.py          # Source A scraper
+  source_b.py          # Source B scraper
+  .env.example         # Environment variables template
   db.py                # SQLite database operations
   config.py            # Loads settings from .env (not tracked)
   migrate_from_excel.py # One-time migration from Excel to SQLite

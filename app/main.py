@@ -1,11 +1,11 @@
-import ac_data
 import db
-import mal_data
+import source_a
+import source_b
 
 USER_CHOICE = """
 Choose an option:
-- 'a' : AC - get basic metadata and next volumes dates
-- 'm' : MAL - get ratings, popularity and rank
+- 'a' : Source A - get basic metadata and next volumes dates
+- 'm' : Source B - get ratings, popularity and rank
 - 'b' : Fetches from both services, then quits
 - 'q' : QUIT
 
@@ -17,13 +17,13 @@ def menu():
     user_input = input(USER_CHOICE)
     while user_input != 'q':
         if user_input == 'a':
-            ac_data.fetch_and_store()
+            source_a.fetch_and_store()
         elif user_input == 'm':
-            mal_data.fetch_and_store()
+            source_b.fetch_and_store()
         elif user_input == 'b':
             print("You chose BOTH")
-            ac_data.fetch_and_store()
-            mal_data.fetch_and_store()
+            source_a.fetch_and_store()
+            source_b.fetch_and_store()
             quit()
         user_input = input(USER_CHOICE)
 
