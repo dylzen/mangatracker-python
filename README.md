@@ -1,21 +1,64 @@
 # mangatracker
 
-WARNING: this script is a work in progress and it's just for reference.
+> **Disclaimer**: This is a personal project created for educational and portfolio purposes only. It is not intended for production use or redistribution. The author does not encourage or endorse scraping third-party websites. Users are responsible for complying with the terms of service of any website they interact with.
 
-## Description
+A personal Python script that tracks manga titles by scraping metadata from popular websites and storing it in a local SQLite database.
 
-This is a script I decided to write for personal use. 
-It has two main features:
+## Features
 
-1) It reads a list of manga titles from an Excel file, fetches the titles data from two different popular websites using browser automation (Selenium for one, BeautifulSoup for the other) and then writes the data to the same Excel file.
+- **Source A**: Fetches Italian metadata (title, author, artist, category, year, volumes, status, release dates) from an Italian manga database
+- **Source B**: Fetches ratings, member count, ranking and popularity from a popular anime/manga catalog
 
-2) It searches for a manga title from user input and shows links to buy from an italian store.
+## Setup
 
-The user is presented with a choice when the script is executed.
+1. Create a conda environment:
+   ```
+   conda create -n mangatracker python=3.12 requests beautifulsoup4 openpyxl
+   conda activate mangatracker
+   pip install python-dotenv
+   ```
 
-Some data is imported from a config file that is not tracked.
+2. Create `app/.env` with your configuration:
+   ```
+   AC_HOME_URL=<source-a-base-url>
+   PATH_CLOUD=
+   ```
 
-## Authors
+3. Run the migration to import manga URLs from the Excel file into SQLite:
+   ```
+   cd app
+   python migrate_from_excel.py
+   ```
+
+## Usage
+
+```
+cd app
+python main.py
+```
+
+You will be presented with a menu:
+```
+Choose an option:
+- 'a' : Source A - get basic metadata and next volumes dates
+- 'm' : Source B - get ratings, popularity and rank
+- 'b' : Fetches from both services, then quits
+- 'q' : QUIT
+```
+
+## Project structure
+
+```
+app/
+  main.py              # Entry point with menu
+  ac_data.py           # Source A scraper
+  mal_data.py          # Source B scraper
+  db.py                # SQLite database operations
+  config.py            # Loads settings from .env (not tracked)
+  migrate_from_excel.py # One-time migration from Excel to SQLite
+```
+
+## Author
 
 Dylan Tangredi\
 [linkedin](https://www.linkedin.com/in/dylantangredi/)
