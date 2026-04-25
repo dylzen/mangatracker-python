@@ -1,78 +1,64 @@
-import file_ops
-import config
 from datetime import datetime
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
 
-def start_driver():
-    print("Initializing webdriver...")
-    chrome_options = Options()
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
-    return driver
+import config
+import file_ops
+import requests
+from bs4 import BeautifulSoup
+
+COLUMNS = [
+    (20, "ratings_mal", "rating"),
+    (21, "members_MAL", "members"),
+    (22, "ranking_MAL", "ranking"),
+    (23, "popularity_MAL", "popularity"),
+]
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/120.0.0.0 Safari/537.36"
+}
+
 
 def get_data(user_input):
-    driver = start_driver()
     print("Fetching data...")
-    ratings = []
-    members = []
-    rankings = []
-    popularities = []
+    results = []
+
     for item_link in file_ops.get_titles(user_input):
-        print("Fetching: "+item_link)
-        driver.get(item_link)
-        wait = WebDriverWait(driver, 5)
-        rating = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div[class*="score-label"]')))
-        member = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[class="numbers members"] strong')))
-        ranking = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[class="numbers ranked"] strong')))
-        popularity = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[class="numbers popularity"] strong')))
-        ratings.append(rating.text)
-        members.append(member.text)
-        rankings.append(ranking.text)
-        popularities.append(popularity.text)
-    print("Stopping webdriver...")
-    driver.stop_client()
-    driver.close()
-    driver.quit()
-    print("Program stopped.")
-    return user_input, ratings, members, rankings, popularities
+        print("Fetching: " + item_link)
+        response = requests.get(item_link, headers=HEADERS)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        rating = soup.select_one('div[class*="score-label"]')
+        member = soup.select_one('span[class="numbers members"] strong')
+        ranking = soup.select_one('span[class="numbers ranked"] strong')
+        popularity = soup.select_one('span[class="numbers popularity"] strong')
+
+        results.append({
+            "rating": rating.text.strip() if rating else "",
+            "members": member.text.strip() if member else "",
+            "ranking": ranking.text.strip() if ranking else "",
+            "popularity": popularity.text.strip() if popularity else "",
+        })
+
+    return results
+
 
 def mal_write_to_xlsx(user_input):
+    results = get_data(user_input)
+
     print("Writing data to excel file...")
-    user_input, ratings, members, rankings, popularities = get_data(user_input)
     path_collection, book = file_ops.load_book()
-    sheet = book['Lista']
-    now = datetime.now()
-    timestamp = now.strftime("%d/%m/%Y %H:%M:%S")
+    sheet = book["Lista"]
+    timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-    sheet.cell(row=1, column=20, value="ratings_mal")           # column T
-    for row_num, value in enumerate(ratings, start=2):
-        sheet.cell(row=row_num, column=20, value=value)
+    for col_num, header, key in COLUMNS:
+        sheet.cell(row=1, column=col_num, value=header)
+        for row_num, entry in enumerate(results, start=2):
+            sheet.cell(row=row_num, column=col_num, value=entry[key])
 
-    sheet.cell(row=1, column=21, value="members_MAL")           # column U
-    for row_num, value in enumerate(members, start=2):
-        sheet.cell(row=row_num, column=21, value=value)
-
-    sheet.cell(row=1, column=22, value="ranking_MAL")           # column V
-    for row_num, value in enumerate(rankings, start=2):
-        sheet.cell(row=row_num, column=22, value=value)
-
-    sheet.cell(row=1, column=23, value="popularity_MAL")        # column W
-    for row_num, value in enumerate(popularities, start=2):
-        sheet.cell(row=row_num, column=23, value=value)
-
-    sheet.cell(row=1, column=25, value=timestamp)               # column Y
+    sheet.cell(row=1, column=25, value=timestamp)
 
     book.save(path_collection)
     print("Collection file updated successfully.")
-        
-    file_ops.copy_to_cloud(path_collection, config.path_cloud)
 
+    file_ops.copy_to_cloud(path_collection, config.path_cloud)
