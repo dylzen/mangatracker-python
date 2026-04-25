@@ -15,8 +15,8 @@ def init_db():
     conn.execute("""
         CREATE TABLE IF NOT EXISTS manga (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ac_url TEXT UNIQUE,
-            mal_url TEXT UNIQUE,
+            source_a_url TEXT UNIQUE,
+            source_b_url TEXT UNIQUE,
             titolo_italiano TEXT,
             storia TEXT,
             disegni TEXT,
@@ -28,32 +28,32 @@ def init_db():
             prossimo_volume TEXT,
             prossima_data TEXT,
             stato_italia TEXT,
-            rating_mal TEXT,
-            members_mal TEXT,
-            ranking_mal TEXT,
-            popularity_mal TEXT,
-            mal_updated_at TEXT
+            rating TEXT,
+            members TEXT,
+            ranking TEXT,
+            popularity TEXT,
+            source_b_updated_at TEXT
         )
     """)
     conn.commit()
     conn.close()
 
 
-def get_ac_urls():
+def get_source_a_urls():
     conn = _connect()
-    rows = conn.execute("SELECT ac_url FROM manga WHERE ac_url IS NOT NULL").fetchall()
+    rows = conn.execute("SELECT source_a_url FROM manga WHERE source_a_url IS NOT NULL").fetchall()
     conn.close()
-    return [row["ac_url"] for row in rows]
+    return [row["source_a_url"] for row in rows]
 
 
-def get_mal_urls():
+def get_source_b_urls():
     conn = _connect()
-    rows = conn.execute("SELECT mal_url FROM manga WHERE mal_url IS NOT NULL").fetchall()
+    rows = conn.execute("SELECT source_b_url FROM manga WHERE source_b_url IS NOT NULL").fetchall()
     conn.close()
-    return [row["mal_url"] for row in rows]
+    return [row["source_b_url"] for row in rows]
 
 
-def update_ac_data(ac_url, data):
+def update_source_a_data(source_a_url, data):
     conn = _connect()
     conn.execute("""
         UPDATE manga SET
@@ -68,7 +68,7 @@ def update_ac_data(ac_url, data):
             prossimo_volume = ?,
             prossima_data = ?,
             stato_italia = ?
-        WHERE ac_url = ?
+        WHERE source_a_url = ?
     """, (
         data["titolo_italiano"],
         data["storia"],
@@ -81,39 +81,39 @@ def update_ac_data(ac_url, data):
         data["prossimo_volume"],
         data["prossima_data"],
         data["stato_italia"],
-        ac_url,
+        source_a_url,
     ))
     conn.commit()
     conn.close()
 
 
-def update_mal_data(mal_url, data, timestamp):
+def update_source_b_data(source_b_url, data, timestamp):
     conn = _connect()
     conn.execute("""
         UPDATE manga SET
-            rating_mal = ?,
-            members_mal = ?,
-            ranking_mal = ?,
-            popularity_mal = ?,
-            mal_updated_at = ?
-        WHERE mal_url = ?
+            rating = ?,
+            members = ?,
+            ranking = ?,
+            popularity = ?,
+            source_b_updated_at = ?
+        WHERE source_b_url = ?
     """, (
         data["rating"],
         data["members"],
         data["ranking"],
         data["popularity"],
         timestamp,
-        mal_url,
+        source_b_url,
     ))
     conn.commit()
     conn.close()
 
 
-def insert_manga(ac_url=None, mal_url=None):
+def insert_manga(source_a_url=None, source_b_url=None):
     conn = _connect()
     conn.execute(
-        "INSERT OR IGNORE INTO manga (ac_url, mal_url) VALUES (?, ?)",
-        (ac_url, mal_url),
+        "INSERT OR IGNORE INTO manga (source_a_url, source_b_url) VALUES (?, ?)",
+        (source_a_url, source_b_url),
     )
     conn.commit()
     conn.close()

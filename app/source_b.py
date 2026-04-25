@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import config
 import db
 import requests
 from bs4 import BeautifulSoup
@@ -13,12 +12,12 @@ HEADERS = {
 
 
 def fetch_and_store():
-    print("Fetching MAL data...")
+    print("Fetching Source B data...")
     timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-    for mal_url in db.get_mal_urls():
-        print("Fetching: " + mal_url)
-        response = requests.get(mal_url, headers=HEADERS)
+    for url in db.get_source_b_urls():
+        print("Fetching: " + url)
+        response = requests.get(url, headers=HEADERS)
         soup = BeautifulSoup(response.text, "html.parser")
 
         rating = soup.select_one('div[class*="score-label"]')
@@ -33,6 +32,6 @@ def fetch_and_store():
             "popularity": popularity.text.strip() if popularity else "",
         }
 
-        db.update_mal_data(mal_url, data, timestamp)
+        db.update_source_b_data(url, data, timestamp)
 
-    print("MAL data updated successfully.")
+    print("Source B data updated successfully.")

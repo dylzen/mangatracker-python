@@ -5,11 +5,13 @@ import db
 import requests
 from bs4 import BeautifulSoup
 
-AC_COOKIES = {"ac_campaign": "show"}
+
+def _get_cookies():
+    return {config.source_a_cookie_name: config.source_a_cookie_value}
 
 
 def _fetch_page(url):
-    response = requests.get(url, cookies=AC_COOKIES)
+    response = requests.get(url, cookies=_get_cookies())
     return BeautifulSoup(response.text, "html.parser")
 
 
@@ -54,12 +56,12 @@ def _parse_release_info(soup, home_url):
 
 
 def fetch_and_store():
-    print("Fetching AC data...")
-    home_url = config.ac_home_url
+    print("Fetching Source A data...")
+    home_url = config.source_a_home_url
 
-    for ac_url in db.get_ac_urls():
-        print("Fetching " + ac_url)
-        soup = _fetch_page(ac_url)
+    for url in db.get_source_a_urls():
+        print("Fetching " + url)
+        soup = _fetch_page(url)
 
         titolo = soup.find("h1").getText().strip()
         print(titolo)
@@ -83,6 +85,6 @@ def fetch_and_store():
             "ultima_data": ultima_data,
         }
 
-        db.update_ac_data(ac_url, data)
+        db.update_source_a_data(url, data)
 
-    print("AC data updated successfully.")
+    print("Source A data updated successfully.")
