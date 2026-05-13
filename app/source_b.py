@@ -11,9 +11,23 @@ HEADERS = {
 }
 
 
+def _parse_float(text):
+    try:
+        return float(text)
+    except (ValueError, TypeError):
+        return None
+
+
+def _parse_int(text):
+    try:
+        return int(text.replace(",", "").replace("#", ""))
+    except (ValueError, TypeError, AttributeError):
+        return None
+
+
 def fetch_and_store():
     print("Fetching Source B data...")
-    timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     for url in db.get_source_b_urls():
         print("Fetching: " + url)
@@ -26,10 +40,10 @@ def fetch_and_store():
         popularity = soup.select_one('span[class="numbers popularity"] strong')
 
         data = {
-            "rating": rating.text.strip() if rating else "",
-            "members": member.text.strip() if member else "",
-            "ranking": ranking.text.strip() if ranking else "",
-            "popularity": popularity.text.strip() if popularity else "",
+            "rating": _parse_float(rating.text.strip()) if rating else None,
+            "members": _parse_int(member.text) if member else None,
+            "ranking": _parse_int(ranking.text) if ranking else None,
+            "popularity": _parse_int(popularity.text) if popularity else None,
         }
 
         db.update_source_b_data(url, data, timestamp)

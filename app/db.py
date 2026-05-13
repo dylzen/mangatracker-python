@@ -22,16 +22,16 @@ def init_db():
             disegni TEXT,
             categoria TEXT,
             anno TEXT,
-            volumi TEXT,
+            volumi INTEGER,
             ultimo_volume TEXT,
             ultima_data TEXT,
             prossimo_volume TEXT,
             prossima_data TEXT,
             stato_italia TEXT,
-            rating TEXT,
-            members TEXT,
-            ranking TEXT,
-            popularity TEXT,
+            rating REAL,
+            members INTEGER,
+            ranking INTEGER,
+            popularity INTEGER,
             source_b_updated_at TEXT
         )
     """)
