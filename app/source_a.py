@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 import config
 import db
@@ -22,11 +23,25 @@ def _get_field(soup, label):
     return re.sub(r"\s+", " ", tag.parent.find_next_sibling("dd").text.strip())
 
 
+def _to_iso_date(date_str):
+    try:
+        return datetime.strptime(date_str.strip(), "%d/%m/%Y").strftime("%Y-%m-%d")
+    except (ValueError, AttributeError):
+        return date_str
+
+
+def _parse_int(text):
+    try:
+        return int(text)
+    except (ValueError, TypeError):
+        return None
+
+
 def _get_release_date(url):
     soup = _fetch_page(url)
     date_tag = soup.find("strong", text="Data pubblicazione:")
     if date_tag and date_tag.next_sibling:
-        return date_tag.next_sibling.text.strip()
+        return _to_iso_date(date_tag.next_sibling.text)
     return ""
 
 
@@ -77,7 +92,7 @@ def fetch_and_store():
             "disegni": _get_field(soup, "Disegni"),
             "categoria": _get_field(soup, "Categoria"),
             "anno": re.sub(r"\s+", "", _get_field(soup, "Anno")),
-            "volumi": _get_field(soup, "Volumi"),
+            "volumi": _parse_int(_get_field(soup, "Volumi")),
             "stato_italia": stato,
             "prossimo_volume": prossimo_volume,
             "prossima_data": prossima_data,
